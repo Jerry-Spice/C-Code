@@ -4,6 +4,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+
+/*
+TODO: Fix max value bug - with the current system the graph will occassionally return a child index of the max value of the array which shouldn't be possible.
+*/
+
 int input_i(char * msg) { //returns the number value of whatever the user inputs
     int num;
     malloc(sizeof(int));
@@ -25,43 +30,90 @@ struct Node {
     struct Node* child;
 } Node;
 
-int main() {
-    //init for the random function
-    time_t t;
-    srand((unsigned)time(&t));
+void sortIndexesList(int indexes[], int indexSize) {
+    for (int i = 1; i < indexSize; i++) {
+        for (int g = 1; g < indexSize; g++) {
+            if (indexes[i] < indexes[g]) {
+                int saved = indexes[i];
+                indexes[i] = indexes[g];
+                indexes[g] = saved;
+            }
+        }
+    }
+}
 
-    struct Node nodes[10];
-    int indexes[9] = { 1,2,3,4,5,6,7,8,9 };
-    char* names[10] = { "Josh","Jerry","Spice","Jim","Makayla","Rebbecca","Ella","Justin","Fiona", "Jake"};
-    int indexSize = 9;
+void assignNodesList(int indexSize, struct Node nodes[], char* names[], int indexes[]) {
     //assigning node values
-    for (int index = 0; index < 10; index++) {
+    for (int index = 0; index < indexSize; index++) {
         nodes[index].index = index;
         nodes[index].info = names[index];
     }
     //assigning child values
-    for (int index = 0; index < 10; index++) {
-        if (index + 1 < 10) {
-            int TIndex = indexes[rand() % indexSize];
-            while (indexes[TIndex] == index || indexes[TIndex] == -1) {
-                TIndex = rand() % indexSize;
-            }
-            //printf()
-            nodes[index].child = &nodes[indexes[TIndex]];
-            //removing the index from the list of available indexes
-            for (int i = TIndex; i < indexSize-1; i++) {
-                indexes[i] = indexes[i + 1];
-            }
-            indexes[indexSize - 1] = -1;
-            indexSize--;
+    ///<summary>
+    /// steps for algorithm
+    /// 1. chooose random index + buffer for indexes value
+    /// 2. set indexes[index] = -1 & increase buffer by 1
+    /// 3. sort indexes array to ensure -1's are at the front
+    /// 4. repeat 
+    ///</summary>
+    int indexesLeft = indexSize;
+    int buffer = 0;
+    int targetIndex;
+    int actualID;
+    for (int index = 0; index < indexSize; index++) {
+        // debug | printf("\n------%i-------\n", index);
+        if (indexesLeft > 1) {
+            // debug | for (int a = 0; a < indexSize; a++) {
+            // debug |     printf("%i:", a);
+            // debug |     printf("%i\n", indexes[a]);
+            // debug | }
+            //step 1
+            targetIndex = (rand() % indexesLeft) + buffer;
+            actualID = indexes[targetIndex];
+            nodes[index].child = &nodes[actualID];
+            //step 2
+            // debug | printf("\n%i", targetIndex);
+            indexes[targetIndex] = -1;
+            buffer++; 
+            indexesLeft--;
+
+            //step 3
+            sortIndexesList(indexes, indexSize);
+            //for (int a = 0; a < indexSize; a++) {
+            //    printf("%i:", a);
+            //    printf("%i\n", indexes[a]);
+            //}
+
+            //step 4
+            //repeat
+            
         }
         else {
             nodes[index].child = &nodes[0];
         }
     }
+}
+
+
+
+int main() {
+    //init for the random function
+    time_t t;
+    srand((unsigned)time(&t));
+
+    
+    int indexSize = 20;
+    struct Node nodes[20];
+    int indexes[20];
+    char* names[20];
+    for (int i = 0; i < indexSize; i++) {
+        indexes[i] = i;
+        names[i] = "empty";
+    }
+    assignNodesList(indexSize, nodes, names, indexes);
     //displaying node values
     printf("-----------------------\n");
-    for (int index = 0; index < 10; index++) {
+    for (int index = 0; index < indexSize; index++) {
         printf("%i",nodes[index].index);
         printf(" | ");
         printf("%s", nodes[index].info);
@@ -69,11 +121,6 @@ int main() {
         printf("%i", nodes[index].child->index);
         printf("\n");
     }
-
-
-
-
-
 
     return 0;
 }
